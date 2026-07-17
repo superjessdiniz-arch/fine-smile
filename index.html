@@ -685,6 +685,8 @@
                 </div>
 
                 <button class="btn-primary" id="mainSubmitBtn" onclick="submitAuthForm()">ログイン</button>
+
+                <div id="authStatusMsg" style="display:none; font-size:0.85rem; font-weight:600; text-align:center; padding:10px; border-radius:10px; margin-top:4px; word-break:break-word;"></div>
             </div>
 
             <p class="login-toggle-link" id="toggleAuthLink" onclick="toggleAuthMode()">
@@ -856,6 +858,25 @@
         renderCalendar();
     };
 
+    function showAuthStatus(message, isError) {
+        const el = document.getElementById('authStatusMsg');
+        if (!el) return;
+        el.style.display = 'block';
+        el.style.backgroundColor = isError ? '#ffebe9' : '#e9f9ee';
+        el.style.color = isError ? '#ff3b30' : '#248a3d';
+        el.innerText = message;
+    }
+
+    // Captura qualquer erro de JavaScript não tratado e mostra na tela,
+    // já que alert() pode ser bloqueado em alguns navegadores de celular
+    // (in-app browsers do WhatsApp/Instagram, por exemplo).
+    window.addEventListener('error', function(e) {
+        showAuthStatus('Erro JS: ' + e.message, true);
+    });
+    window.addEventListener('unhandledrejection', function(e) {
+        showAuthStatus('Erro assíncrono: ' + (e.reason && e.reason.message ? e.reason.message : e.reason), true);
+    });
+
     function applyTranslations() {
         document.getElementById('headerTitle').innerText = t.brandTitle;
         document.getElementById('brandTitle').innerText = t.brandTitle;
@@ -901,14 +922,20 @@
     }
 
     async function submitAuthForm() {
+        document.getElementById('authStatusMsg').style.display = 'none';
+
         const email = document.getElementById('emailInput').value.trim().toLowerCase();
         const password = document.getElementById('passwordInput').value;
         const name = document.getElementById('nameInput').value.trim();
 
         if (!email || !password || (authMode === 'register' && !name)) {
-            alert(t.alertFillFields);
+            showAuthStatus(t.alertFillFields, true);
             return;
         }
+
+        const submitBtn = document.getElementById('mainSubmitBtn');
+        submitBtn.disabled = true;
+        showAuthStatus(lang === 'pt' ? 'Enviando...' : '送信中...', false);
 
         if (isSupabaseEnabled) {
             try {
@@ -919,8 +946,19 @@
                         options: { data: { full_name: name, role: 'スタッフ' } }
                     });
                     if (error) throw error;
-                    alert(t.alertSuccessReg);
-                    toggleAuthMode();
+
+                    // Se o Supabase já retorna um "identities" vazio, o e-mail já existe
+                    // mas está com uma conta não confirmada (comportamento comum do Supabase Auth).
+                    if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+                        showAuthStatus(lang === 'pt'
+                            ? 'Este e-mail já está cadastrado. Tente fazer login ou verifique sua caixa de entrada para confirmar a conta.'
+                            : 'このメールアドレスは既に登録されています。ログインするか、確認メールをチェックしてください。', true);
+                        return;
+                    }
+
+                    console.log('signUp OK:', data);
+                    showAuthStatus(t.alertSuccessReg, false);
+                    setTimeout(toggleAuthMode, 1500);
                 } else {
                     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
                     if (error) throw error;
@@ -935,7 +973,16 @@
                     enterApp();
                 }
             } catch (err) {
-                alert(err.message);
+                console.error('Erro de autenticação Supabase:', err);
+                if (err.message && err.message.toLowerCase().includes('email not confirmed')) {
+                    showAuthStatus(lang === 'pt'
+                        ? 'Seu e-mail ainda não foi confirmado. Verifique sua caixa de entrada (e spam) e clique no link de confirmação antes de entrar.'
+                        : 'メールアドレスがまだ確認されていません。受信箱（迷惑メールも）を確認してください。', true);
+                } else {
+                    showAuthStatus('Erro: ' + err.message, true);
+                }
+            } finally {
+                submitBtn.disabled = false;
             }
         } else {
             if (authMode === 'register') {
