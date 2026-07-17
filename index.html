@@ -3,42 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ファインスマイル 予定登録</title>
+    <title>ファインスマイル</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { margin: 0; background-color: #f2f2f7; font-family: -apple-system, sans-serif; display: flex; justify-content: center; min-height: 100vh; padding: 20px; }
+        :root { --ios-blue: #007aff; --ios-bg: #f2f2f7; --ios-card: #ffffff; }
+        body { margin: 0; padding: 20px; background-color: var(--ios-bg); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; display: flex; justify-content: center; }
         .app-container { width: 100%; max-width: 400px; }
-        .header { text-align: center; font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; }
         
-        /* Input de Nome */
-        .name-input { width: 100%; padding: 15px; margin-bottom: 20px; border: 1px solid #e5e5ea; border-radius: 12px; font-size: 1rem; box-sizing: border-box; }
+        /* Cabeçalho e Navegação */
+        .calendar-header { background: var(--ios-card); padding: 20px; border-radius: 16px; margin-bottom: 15px; text-align: center; }
+        .nav-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .nav-controls button { background: none; border: none; color: var(--ios-blue); font-size: 1rem; cursor: pointer; }
+        #monthDisplay { font-size: 1.2rem; font-weight: 700; }
         
-        .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; background: white; padding: 15px; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: #f2f2f7; border-radius: 8px; font-size: 0.9rem; cursor: pointer; }
-        .day:active { background: #d1d1d6; }
-        .header-day { font-weight: bold; color: #8e8e93; background: none; }
+        /* Grid do Calendário */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; background: var(--ios-card); padding: 15px; border-radius: 16px; }
+        .day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: #f9f9f9; border-radius: 8px; font-size: 0.9rem; cursor: pointer; }
+        .day:hover { background: #e5e5ea; }
+        .day-label { font-weight: 600; color: #8e8e93; font-size: 0.8rem; }
+        
+        /* Input */
+        .name-input { width: 100%; padding: 15px; margin-bottom: 15px; border: 1px solid #d1d1d6; border-radius: 12px; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div class="header">ファインスマイル</div>
+    <input type="text" id="userName" class="name-input" placeholder="お名前を入力">
     
-    <!-- Campo para o nome -->
-    <input type="text" id="userName" class="name-input" placeholder="お名前を入力してください">
-    
-    <div class="calendar" id="calendar">
-        <div class="day header-day">日</div><div class="day header-day">月</div>
-        <div class="day header-day">火</div><div class="day header-day">水</div>
-        <div class="day header-day">木</div><div class="day header-day">金</div>
-        <div class="day header-day">土</div>
-        
-        <script>
-            for(let i = 1; i <= 31; i++) {
-                document.write(`<div class="day" onclick="markDate(${i})">${i}</div>`);
-            }
-        </script>
+    <div class="calendar-header">
+        <div class="nav-controls">
+            <button onclick="changeDate('year', -1)">« 年</button>
+            <button onclick="changeDate('month', -1)">‹ 月</button>
+            <span id="monthDisplay">2026年 7月</span>
+            <button onclick="changeDate('month', 1)">月 ›</button>
+            <button onclick="changeDate('year', 1)">年 »</button>
+        </div>
     </div>
+
+    <div class="calendar-grid" id="calendarGrid"></div>
 </div>
 
 <script>
@@ -46,26 +49,50 @@
     const SUPABASE_ANON_KEY = "sb_publishable_5T2YaTeA1jhv_ofatSeSwQ_xq6tAqsI";
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    async function markDate(day) {
-        const name = document.getElementById('userName').value;
+    let currentDate = new Date();
+
+    function renderCalendar() {
+        const grid = document.getElementById('calendarGrid');
+        grid.innerHTML = '';
         
-        if (!name) {
-            alert("お名前を入力してください！");
-            return;
-        }
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        document.getElementById('monthDisplay').innerText = `${year}年 ${month + 1}月`;
 
-        // Tenta salvar na tabela 'availabilities'
-        const { error } = await supabase
-            .from('availabilities')
-            .insert([{ name: name, date: `2026-07-${day.toString().padStart(2, '0')}` }]);
+        // Dias da semana
+        ['日', '月', '火', '水', '木', '金', '土'].forEach(d => {
+            grid.innerHTML += `<div class="day day-label">${d}</div>`;
+        });
 
-        if (error) {
-            alert("エラー: " + error.message);
-        } else {
-            alert(`${day}日を登録しました。`);
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        // Espaços vazios
+        for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div></div>`;
+
+        // Dias
+        for (let i = 1; i <= daysInMonth; i++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+            grid.innerHTML += `<div class="day" onclick="markDate('${dateStr}')">${i}</div>`;
         }
     }
-</script>
 
+    function changeDate(type, delta) {
+        if (type === 'month') currentDate.setMonth(currentDate.getMonth() + delta);
+        else currentDate.setFullYear(currentDate.getFullYear() + delta);
+        renderCalendar();
+    }
+
+    async function markDate(date) {
+        const name = document.getElementById('userName').value;
+        if (!name) { alert("お名前を入力してください"); return; }
+        
+        const { error } = await supabase.from('availabilities').insert([{ name, date }]);
+        if (error) alert("エラー: " + error.message);
+        else alert(date + " を登録しました");
+    }
+
+    renderCalendar();
+</script>
 </body>
 </html>
