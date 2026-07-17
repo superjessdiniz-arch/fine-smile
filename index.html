@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --ios-blue: #007aff; --ios-bg: #f2f2f7; --ios-card: #ffffff; }
-        body { margin: 0; padding: 20px; background-color: var(--ios-bg); font-family: -apple-system, sans-serif; display: flex; justify-content: center; min-height: 100vh;}
+        body { margin: 0; padding: 20px; background-color: var(--ios-bg); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; display: flex; justify-content: center; min-height: 100vh;}
         .app-container { width: 100%; max-width: 400px; display: flex; flex-direction: column; }
         .header { text-align: center; font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; }
         .name-input { width: 100%; padding: 15px; margin-bottom: 15px; border: 1px solid #d1d1d6; border-radius: 12px; box-sizing: border-box; font-size: 1rem; }
@@ -41,7 +41,6 @@
         const SUPABASE_URL = "https://xzgctiomfdhbmadmqvtm.supabase.co"; 
         const SUPABASE_ANON_KEY = "sb_publishable_5T2YaTeA1jhv_ofatSeSwQ_xq6tAqsI";
         
-        // Correção: Uso correto do window.supabase
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let currentDate = new Date();
 
