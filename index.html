@@ -764,10 +764,11 @@
 
 <script>
     const SUPABASE_URL = "https://xzgctiomfdhbmadmqvtm.supabase.co"; 
-    const SUPABASE_ANON_KEY = "sb_publishable_5T2YaTeA1jhv_ofatSeSwQ_xq6tAqsI";
+    // ATENÇÃO: Substitua o texto abaixo pela chave enorme que você copiou no Supabase (que começa com "sb_publishable_")
+    const SUPABASE_ANON_KEY = "COLE_AQUI_A_SUA_CHAVE_COMPLETA_DO_SUPABASE";
 
     let supabase = null;
-    const isSupabaseEnabled = SUPABASE_URL !== "" && SUPABASE_ANON_KEY !== "";
+    const isSupabaseEnabled = SUPABASE_URL !== "" && SUPABASE_ANON_KEY !== "" && SUPABASE_ANON_KEY !== "COLE_AQUI_A_SUA_CHAVE_COMPLETA_DO_SUPABASE";
 
     if (isSupabaseEnabled) {
         supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
