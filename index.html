@@ -572,6 +572,77 @@
             font-size: 0.95rem;
             font-weight: 500;
         }
+
+        /* Delete confirmation modal */
+        .delete-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .delete-modal.active {
+            display: flex;
+        }
+
+        .delete-modal-content {
+            background-color: white;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 280px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .delete-modal-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #333;
+        }
+
+        .delete-modal-text {
+            font-size: 0.95rem;
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .delete-modal-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .delete-modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .delete-modal-btn.cancel {
+            background-color: #f2f2f7;
+            color: #007aff;
+        }
+
+        .delete-modal-btn.confirm {
+            background-color: #ff3b30;
+            color: white;
+        }
+
+        .delete-modal-btn:active {
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body>
@@ -584,7 +655,7 @@
         <div class="header-right">
             <span class="user-name" id="userNameLabel">ジェシカ</span>
             <span class="role-badge" id="userRoleLabel">スタッフ</span>
-            <button class="delete-account-btn" onclick="deleteAccount()" id="deleteAccountBtn" title="Excluir Conta">🗑️</button>
+            <button class="delete-account-btn" onclick="showDeleteConfirm()" id="deleteAccountBtn" title="Excluir Conta">🗑️</button>
             <button class="logout-icon" onclick="logout()">➔</button>
         </div>
     </div>
@@ -677,6 +748,18 @@
             </div>
         </div>
     </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="delete-modal" id="deleteModal">
+        <div class="delete-modal-content">
+            <div class="delete-modal-title" id="deleteModalTitle">アカウント削除</div>
+            <div class="delete-modal-text" id="deleteModalText">本当にアカウントを削除しますか？登録されたすべてのスケジュール（休みデータ）も一緒に完全に削除されます。</div>
+            <div class="delete-modal-buttons">
+                <button class="delete-modal-btn cancel" onclick="closeDeleteConfirm()" id="deleteCancelBtn">キャンセル</button>
+                <button class="delete-modal-btn confirm" onclick="confirmDeleteAccount()" id="deleteConfirmBtn">削除</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -713,13 +796,15 @@
             adminBadge: "管理者",
             alertFillFields: "すべてのフィールドを入力してください。",
             alertSuccessReg: "アカウントが作成されました！ログインしてください。",
-            confirmDelete: "本当にアカウントを削除しますか？登録されたすべてのスケジュール（休みデータ）も一緒に完全に削除されます。この操作は取り消せません。",
+            confirmDelete: "本当にアカウントを削除しますか？登録されたすべてのスケジュール（休みデータ）も一緒に完全に削除されます。",
             reasonGroup: "理由を選択",
             reasonIllness: "病気 / 体調不良",
             reasonVacation: "休暇 / 出張",
             reasonDayoff: "休み希望",
             reasonOther: "その他",
-            alertSelectReason: "理由を選択してください。"
+            alertSelectReason: "理由を選択してください。",
+            deleteAccountSuccess: "アカウントが完全に削除されました！",
+            deleteAccountSupabaseMsg: "スケジュールデータが削除されました。サインイン用アカウントの完全削除は管理者に依頼してください。"
         },
         pt: {
             brandTitle: "Fine Smile",
@@ -746,7 +831,9 @@
             reasonVacation: "Férias / Viagem",
             reasonDayoff: "Folga",
             reasonOther: "Outro motivo",
-            alertSelectReason: "Por favor, selecione um motivo."
+            alertSelectReason: "Por favor, selecione um motivo.",
+            deleteAccountSuccess: "Sua conta foi permanentemente excluída!",
+            deleteAccountSupabaseMsg: "Suas ausências foram removidas. Para apagar definitivamente seu login do Supabase, solicite ao administrador de TI."
         }
     };
 
@@ -782,6 +869,12 @@
         document.getElementById('reasonDayoffLabel').innerText = t.reasonDayoff;
         document.getElementById('reasonOtherLabel').innerText = t.reasonOther;
         document.getElementById('deleteAccountBtn').title = lang === 'pt' ? 'Excluir Conta' : 'アカウント削除';
+        
+        // Update delete modal text
+        document.getElementById('deleteModalTitle').innerText = lang === 'pt' ? 'Excluir Conta' : 'アカウント削除';
+        document.getElementById('deleteModalText').innerText = t.confirmDelete;
+        document.getElementById('deleteCancelBtn').innerText = lang === 'pt' ? 'Cancelar' : 'キャンセル';
+        document.getElementById('deleteConfirmBtn').innerText = lang === 'pt' ? 'Excluir' : '削除';
         
         updateAuthDOM();
     }
@@ -896,19 +989,24 @@
         document.getElementById('nameInput').value = '';
     }
 
-    async function deleteAccount() {
+    function showDeleteConfirm() {
+        document.getElementById('deleteModal').classList.add('active');
+    }
+
+    function closeDeleteConfirm() {
+        document.getElementById('deleteModal').classList.remove('active');
+    }
+
+    async function confirmDeleteAccount() {
         if (!sessionUser) return;
 
-        const confirmation = confirm(t.confirmDelete);
-        if (!confirmation) return;
+        closeDeleteConfirm();
 
         if (isSupabaseEnabled) {
             try {
                 await supabase.from('availabilities').delete().eq('user_id', sessionUser.id);
                 
-                alert(lang === 'pt' 
-                    ? "Suas ausências foram removidas. Para apagar definitivamente seu login do Supabase, solicite ao administrador de TI." 
-                    : "スケジュールデータが削除されました。サインイン用アカウントの完全削除は管理者に依頼してください。");
+                alert(t.deleteAccountSupabaseMsg);
                 
                 await supabase.auth.signOut();
                 logout();
@@ -922,7 +1020,7 @@
             localAvailabilities = localAvailabilities.filter(a => a.user_id !== sessionUser.id && a.email !== sessionUser.email);
             localStorage.setItem('fs_avails', JSON.stringify(localAvailabilities));
 
-            alert(lang === 'pt' ? "Sua conta foi permanentemente excluída!" : "アカウントが完全に削除されました！");
+            alert(t.deleteAccountSuccess);
             logout();
         }
     }
@@ -998,123 +1096,126 @@
         for (let day = 1; day <= totalDays; day++) {
             const cell = document.createElement('div');
             cell.className = 'grid-day';
-            
-            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            
-            if (today.getFullYear() === year && today.getMonth() === month && today.getDate() === day) {
+
+            if (year === today.getFullYear() && month === today.getMonth() && day === today.getDate()) {
                 cell.classList.add('today');
             }
 
-            cell.innerHTML = `<div class="day-num-box"><span class="day-num">${day}</span></div>`;
-
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const dayUnavails = unavails.filter(a => a.date === dateStr);
-            const badgesList = document.createElement('div');
-            badgesList.className = 'badges-list';
-            
-            dayUnavails.forEach(av => {
-                const pill = document.createElement('span');
-                pill.className = 'badge-pill';
-                pill.innerText = av.user_name;
-                badgesList.appendChild(pill);
-            });
 
-            cell.appendChild(badgesList);
-            cell.onclick = () => openDetailModal(dateStr, dayUnavails);
+            cell.innerHTML = `<div class="day-num-box"><span class="day-num">${day}</span></div>`;
+            if (dayUnavails.length > 0) {
+                const badgesList = document.createElement('div');
+                badgesList.className = 'badges-list';
+                dayUnavails.slice(0, 3).forEach(u => {
+                    const badge = document.createElement('div');
+                    badge.className = 'badge-pill';
+                    badge.innerText = u.user_name;
+                    badgesList.appendChild(badge);
+                });
+                cell.appendChild(badgesList);
+            }
+
+            cell.onclick = () => openDetailModal(dateStr);
+            grid.appendChild(cell);
+        }
+
+        for (let i = 1; i <= (7 * 6 - firstDayIndex - totalDays); i++) {
+            const cell = document.createElement('div');
+            cell.className = 'grid-day inactive';
+            cell.innerHTML = `<div class="day-num-box"><span class="day-num">${i}</span></div>`;
             grid.appendChild(cell);
         }
     }
 
-    function openDetailModal(dateStr, dayUnavails) {
-        if (!sessionUser) return;
+    function openDetailModal(dateStr) {
         activeDateStr = dateStr;
         selectedReason = "";
-        
-        document.getElementById('modalDateTitle').innerText = getFormattedDate(dateStr);
-        
-        const listDiv = document.getElementById('modalStaffList');
-        listDiv.innerHTML = '';
-
-        if (dayUnavails.length === 0) {
-            listDiv.innerHTML = `<span class="no-staff-txt">${t.noStaff}</span>`;
-        } else {
-            dayUnavails.forEach(av => {
-                const item = document.createElement('div');
-                item.className = 'sheet-staff-row';
-                item.innerText = av.user_name;
-                listDiv.appendChild(item);
-            });
-        }
-
-        const isRegistered = dayUnavails.some(a => a.user_id === sessionUser.id || a.email === sessionUser.email);
-        const actionBtn = document.getElementById('modalActionBtn');
-        const reasonGroup = document.getElementById('reasonGroup');
-
-        if (isRegistered) {
-            actionBtn.innerText = t.btnRemoveUnavailable;
-            actionBtn.className = 'action-btn remove';
-            reasonGroup.style.display = 'none';
-            document.querySelectorAll('input[name="absence_reason"]').forEach(r => r.checked = false);
-        } else {
-            actionBtn.innerText = t.btnMakeUnavailable;
-            actionBtn.className = 'action-btn add';
-            reasonGroup.style.display = 'flex';
-        }
-
         document.getElementById('detailModal').classList.add('active');
+        loadModalData(dateStr);
     }
 
     function closeDetailModal() {
         document.getElementById('detailModal').classList.remove('active');
     }
 
-    async function toggleMyUnavailability() {
+    async function loadModalData(dateStr) {
+        const unavails = await fetchAvailabilities();
+        const dayUnavails = unavails.filter(a => a.date === dateStr);
+
+        document.getElementById('modalDateTitle').innerText = getFormattedDate(dateStr);
+        const staffList = document.getElementById('modalStaffList');
+        staffList.innerHTML = '';
+
+        if (dayUnavails.length === 0) {
+            staffList.innerHTML = `<div class="no-staff-txt" id="noStaffMsg">${t.noStaff}</div>`;
+        } else {
+            dayUnavails.forEach(u => {
+                const row = document.createElement('div');
+                row.className = 'sheet-staff-row';
+                row.innerText = u.user_name;
+                staffList.appendChild(row);
+            });
+        }
+
+        const isMyUnavailable = dayUnavails.some(u => u.user_id === sessionUser.id);
         const actionBtn = document.getElementById('modalActionBtn');
-        
-        if (actionBtn.classList.contains('add')) {
-            selectedReason = document.querySelector('input[name="absence_reason"]:checked')?.value || "";
-            
+        const reasonGroup = document.getElementById('reasonGroup');
+
+        if (isMyUnavailable) {
+            actionBtn.innerText = t.btnRemoveUnavailable;
+            actionBtn.classList.remove('add');
+            actionBtn.classList.add('remove');
+            reasonGroup.style.display = 'none';
+        } else {
+            actionBtn.innerText = t.btnMakeUnavailable;
+            actionBtn.classList.remove('remove');
+            actionBtn.classList.add('add');
+            reasonGroup.style.display = 'flex';
+            document.querySelectorAll('input[name="absence_reason"]').forEach(r => r.checked = false);
+        }
+    }
+
+    async function toggleMyUnavailability() {
+        if (!sessionUser) return;
+
+        const unavails = await fetchAvailabilities();
+        const isMyUnavailable = unavails.some(a => a.date === activeDateStr && a.user_id === sessionUser.id);
+
+        if (isMyUnavailable) {
+            if (isSupabaseEnabled) {
+                await supabase.from('availabilities').delete().eq('date', activeDateStr).eq('user_id', sessionUser.id);
+            } else {
+                localAvailabilities = localAvailabilities.filter(a => !(a.date === activeDateStr && a.user_id === sessionUser.id));
+                localStorage.setItem('fs_avails', JSON.stringify(localAvailabilities));
+            }
+        } else {
+            const selectedReason = document.querySelector('input[name="absence_reason"]:checked')?.value || "other";
             if (!selectedReason) {
                 alert(t.alertSelectReason);
                 return;
             }
-        }
 
-        if (isSupabaseEnabled) {
-            try {
-                const { data: existing } = await supabase
-                    .from('availabilities')
-                    .select('*')
-                    .eq('date', activeDateStr)
-                    .eq('user_id', sessionUser.id);
-
-                if (existing && existing.length > 0) {
-                    await supabase.from('availabilities').delete().eq('id', existing[0].id);
-                } else {
-                    await supabase.from('availabilities').insert({
-                        date: activeDateStr,
-                        user_id: sessionUser.id,
-                        user_name: sessionUser.name,
-                        email: sessionUser.email,
-                        reason: selectedReason
-                    });
-                }
-            } catch (err) {
-                console.error(err);
-            }
-        } else {
-            const index = localAvailabilities.findIndex(a => a.date === activeDateStr && a.email === sessionUser.email);
-            if (index > -1) {
-                localAvailabilities.splice(index, 1);
-            } else {
-                localAvailabilities.push({
+            if (isSupabaseEnabled) {
+                await supabase.from('availabilities').insert({
                     date: activeDateStr,
                     user_id: sessionUser.id,
-                    email: sessionUser.email,
                     user_name: sessionUser.name,
+                    email: sessionUser.email,
                     reason: selectedReason
                 });
+            } else {
+                const newEntry = {
+                    date: activeDateStr,
+                    user_id: sessionUser.id,
+                    user_name: sessionUser.name,
+                    email: sessionUser.email,
+                    reason: selectedReason
+                };
+                localAvailabilities.push(newEntry);
+                localStorage.setItem('fs_avails', JSON.stringify(localAvailabilities));
             }
-            localStorage.setItem('fs_avails', JSON.stringify(localAvailabilities));
         }
 
         closeDetailModal();
