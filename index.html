@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ファインスマイル勤務カレンダー / Fine Smile</title>
-    <!-- Supabase UMD CDN (Corrigido para evitar erros no navegador) -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <!-- Script Oficial do Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --ios-bg: #f2f2f7;
@@ -55,7 +55,7 @@
             font-weight: bold;
             padding: 4px 0;
             z-index: 11;
-            display: none; /* Escondido por padrão, controlado via JS */
+            display: none;
         }
 
         .app-header {
@@ -574,7 +574,6 @@
             font-weight: 500;
         }
 
-        /* Delete confirmation modal */
         .delete-modal {
             display: none;
             position: fixed;
@@ -649,7 +648,6 @@
 <body>
 
 <div class="phone-frame">
-    <!-- Banner de status controlado de forma inteligente pelo JS -->
     <div class="demo-banner" id="demoBanner"></div>
 
     <div class="app-header" id="appHeader" style="display: none;">
@@ -751,7 +749,6 @@
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
     <div class="delete-modal" id="deleteModal">
         <div class="delete-modal-content">
             <div class="delete-modal-title" id="deleteModalTitle">アカウント削除</div>
@@ -799,7 +796,7 @@
             reasonOther: "その他",
             alertSelectReason: "理由を選択してください。",
             deleteAccountSuccess: "アカウントが完全に削除されました！",
-            deleteAccountSupabaseMsg: "スケジュールデータが削除されました。サインイン用アカウントの完全削除は管理者に依頼してください。"
+            deleteAccountSupabaseMsg: "スケジュールデータが削除されました。サインイン用アカウント Guild の完全削除は管理者に依頼してください。"
         },
         pt: {
             brandTitle: "Fine Smile",
@@ -852,7 +849,8 @@
 
     function initSupabase() {
         const hasConfig = SUPABASE_URL !== "" && SUPABASE_ANON_KEY !== "";
-        if (hasConfig && window.supabase) {
+        // Correção aplicada aqui na biblioteca global do Supabase v2
+        if (hasConfig && window.supabase && window.supabase.createClient) {
             try {
                 supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 isSupabaseEnabled = true;
