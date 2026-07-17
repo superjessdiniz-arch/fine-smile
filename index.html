@@ -3,56 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ファインスマイル</title>
+    <title>ファインスマイル 予定登録</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --ios-bg: #f2f2f7; --ios-blue: #007aff; }
-        body { margin: 0; background-color: var(--ios-bg); font-family: -apple-system, sans-serif; display: flex; justify-content: center; min-height: 100vh; }
-        .phone-frame { width: 100%; max-width: 430px; background: #fff; min-height: 100vh; display: flex; flex-direction: column; position: relative; }
+        body { margin: 0; background-color: #f2f2f7; font-family: -apple-system, sans-serif; display: flex; justify-content: center; min-height: 100vh; padding: 20px; }
+        .app-container { width: 100%; max-width: 400px; }
+        .header { text-align: center; font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; }
         
-        .screen { display: none; padding: 20px; flex-direction: column; flex-grow: 1; }
-        .active { display: flex; }
-
-        /* Estilo Login */
-        .login-container { display: flex; flex-direction: column; justify-content: center; height: 80vh; }
-        .brand { font-size: 2rem; font-weight: 800; text-align: center; margin-bottom: 40px; }
-        .input { width: 100%; padding: 15px; margin-bottom: 15px; border: 1px solid #e5e5ea; border-radius: 12px; box-sizing: border-box; }
-        .btn { width: 100%; padding: 15px; background: var(--ios-blue); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; }
-
-        /* Estilo Calendário */
-        .header { padding: 20px; text-align: center; font-weight: bold; font-size: 1.2rem; border-bottom: 1px solid #e5e5ea; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); padding: 10px; gap: 5px; }
-        .day-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: #f2f2f7; border-radius: 8px; font-size: 0.9rem; }
+        /* Input de Nome */
+        .name-input { width: 100%; padding: 15px; margin-bottom: 20px; border: 1px solid #e5e5ea; border-radius: 12px; font-size: 1rem; box-sizing: border-box; }
+        
+        .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; background: white; padding: 15px; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: #f2f2f7; border-radius: 8px; font-size: 0.9rem; cursor: pointer; }
+        .day:active { background: #d1d1d6; }
+        .header-day { font-weight: bold; color: #8e8e93; background: none; }
     </style>
 </head>
 <body>
 
-<div class="phone-frame">
-    <!-- TELA DE LOGIN -->
-    <div id="loginScreen" class="screen active">
-        <div class="login-container">
-            <div class="brand">ファインスマイル</div>
-            <h2 id="formTitle" style="text-align:center;">ログイン</h2>
-            <input type="email" id="emailInput" class="input" placeholder="メールアドレス">
-            <input type="password" id="passwordInput" class="input" placeholder="パスワード">
-            <button class="btn" id="mainSubmitBtn" onclick="submitAuthForm()">ログイン</button>
-            <p id="toggleAuthLink" onclick="toggleAuthMode()" style="text-align:center; margin-top:15px; color:var(--ios-blue); cursor:pointer;">アカウント作成はこちら</p>
-        </div>
-    </div>
-
-    <!-- TELA DO CALENDÁRIO -->
-    <div id="calendarScreen" class="screen">
-        <div class="header">ファインスマイル</div>
-        <div class="calendar-grid">
-            <div class="day-cell" style="color:#8e8e93">日</div><div class="day-cell" style="color:#8e8e93">月</div>
-            <div class="day-cell" style="color:#8e8e93">火</div><div class="day-cell" style="color:#8e8e93">水</div>
-            <div class="day-cell" style="color:#8e8e93">木</div><div class="day-cell" style="color:#8e8e93">金</div>
-            <div class="day-cell" style="color:#8e8e93">土</div>
-            <script>
-                for(let i = 1; i <= 31; i++) document.write(`<div class="day-cell">${i}</div>`);
-            </script>
-        </div>
-        <button class="btn" style="margin:20px; width:calc(100% - 40px); background:#ff3b30;" onclick="location.reload()">ログアウト</button>
+<div class="app-container">
+    <div class="header">ファインスマイル</div>
+    
+    <!-- Campo para o nome -->
+    <input type="text" id="userName" class="name-input" placeholder="お名前を入力してください">
+    
+    <div class="calendar" id="calendar">
+        <div class="day header-day">日</div><div class="day header-day">月</div>
+        <div class="day header-day">火</div><div class="day header-day">水</div>
+        <div class="day header-day">木</div><div class="day header-day">金</div>
+        <div class="day header-day">土</div>
+        
+        <script>
+            for(let i = 1; i <= 31; i++) {
+                document.write(`<div class="day" onclick="markDate(${i})">${i}</div>`);
+            }
+        </script>
     </div>
 </div>
 
@@ -60,36 +45,27 @@
     const SUPABASE_URL = "https://xzgctiomfdhbmadmqvtm.supabase.co"; 
     const SUPABASE_ANON_KEY = "sb_publishable_5T2YaTeA1jhv_ofatSeSwQ_xq6tAqsI";
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    
-    let authMode = 'login';
 
-    function toggleAuthMode() {
-        authMode = (authMode === 'login') ? 'register' : 'login';
-        document.getElementById('formTitle').innerText = (authMode === 'login') ? 'ログイン' : 'アカウント作成';
-        document.getElementById('mainSubmitBtn').innerText = (authMode === 'login') ? 'ログイン' : 'アカウント作成';
-        document.getElementById('toggleAuthLink').innerText = (authMode === 'login') ? 'アカウント作成はこちら' : 'ログインはこちら';
-    }
+    async function markDate(day) {
+        const name = document.getElementById('userName').value;
+        
+        if (!name) {
+            alert("お名前を入力してください！");
+            return;
+        }
 
-    async function submitAuthForm() {
-        const email = document.getElementById('emailInput').value;
-        const password = document.getElementById('passwordInput').value;
+        // Tenta salvar na tabela 'availabilities'
+        const { error } = await supabase
+            .from('availabilities')
+            .insert([{ name: name, date: `2026-07-${day.toString().padStart(2, '0')}` }]);
 
-        try {
-            if (authMode === 'register') {
-                const { error } = await supabase.auth.signUp({ email, password });
-                if (error) throw error;
-                alert("登録完了！");
-                toggleAuthMode();
-            } else {
-                const { error } = await supabase.auth.signInWithPassword({ email, password });
-                if (error) throw error;
-                document.getElementById('loginScreen').classList.remove('active');
-                document.getElementById('calendarScreen').classList.add('active');
-            }
-        } catch (err) {
-            alert("エラー: " + err.message);
+        if (error) {
+            alert("エラー: " + error.message);
+        } else {
+            alert(`${day}日を登録しました。`);
         }
     }
 </script>
+
 </body>
 </html>
