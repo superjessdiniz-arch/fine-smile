@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ファインスマイル勤務カレンダー / Fine Smile</title>
-    <!-- Supabase CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase UMD CDN (Corrigido para evitar erros no navegador) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <style>
         :root {
             --ios-bg: #f2f2f7;
@@ -55,6 +55,7 @@
             font-weight: bold;
             padding: 4px 0;
             z-index: 11;
+            display: none; /* Escondido por padrão, controlado via JS */
         }
 
         .app-header {
@@ -648,7 +649,8 @@
 <body>
 
 <div class="phone-frame">
-    <div class="demo-banner" id="demoBanner">Usando Supabase (Dados na nuvem compartilhados)</div>
+    <!-- Banner de status controlado de forma inteligente pelo JS -->
+    <div class="demo-banner" id="demoBanner"></div>
 
     <div class="app-header" id="appHeader" style="display: none;">
         <span class="header-left" id="headerTitle">ファインスマイル</span>
@@ -767,14 +769,7 @@
     const SUPABASE_ANON_KEY = "sb_publishable_5T2YaTeA1jhv_ofatSeSwQ_xq6tAqsI";
 
     let supabase = null;
-    const isSupabaseEnabled = SUPABASE_URL !== "" && SUPABASE_ANON_KEY !== "";
-
-    if (isSupabaseEnabled) {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        document.getElementById('demoBanner').style.display = 'none';
-    } else {
-        document.getElementById('demoBanner').style.display = 'block';
-    }
+    let isSupabaseEnabled = false;
 
     const dictionary = {
         ja: {
@@ -851,8 +846,32 @@
 
     window.onload = function() {
         applyTranslations();
+        initSupabase();
         renderCalendar();
     };
+
+    function initSupabase() {
+        const hasConfig = SUPABASE_URL !== "" && SUPABASE_ANON_KEY !== "";
+        if (hasConfig && window.supabase) {
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                isSupabaseEnabled = true;
+                document.getElementById('demoBanner').style.display = 'none';
+            } catch (err) {
+                console.error("Erro ao inicializar o Supabase:", err);
+                showDemoBanner(lang === 'pt' ? "Erro na conexão Supabase. Usando Modo Demo." : "接続エラー。デモモードを実行中。");
+            }
+        } else {
+            showDemoBanner(lang === 'pt' ? "Modo Demo (Dados salvos localmente)" : "デモモード（ローカル保存）");
+        }
+    }
+
+    function showDemoBanner(message) {
+        isSupabaseEnabled = false;
+        const banner = document.getElementById('demoBanner');
+        banner.style.display = 'block';
+        banner.innerText = message;
+    }
 
     function applyTranslations() {
         document.getElementById('headerTitle').innerText = t.brandTitle;
@@ -870,7 +889,6 @@
         document.getElementById('reasonOtherLabel').innerText = t.reasonOther;
         document.getElementById('deleteAccountBtn').title = lang === 'pt' ? 'Excluir Conta' : 'アカウント削除';
         
-        // Update delete modal text
         document.getElementById('deleteModalTitle').innerText = lang === 'pt' ? 'Excluir Conta' : 'アカウント削除';
         document.getElementById('deleteModalText').innerText = t.confirmDelete;
         document.getElementById('deleteCancelBtn').innerText = lang === 'pt' ? 'Cancelar' : 'キャンセル';
@@ -908,7 +926,7 @@
             return;
         }
 
-        if (isSupabaseEnabled) {
+        if (isSupabaseEnabled && supabase) {
             try {
                 if (authMode === 'register') {
                     const { data, error } = await supabase.auth.signUp({
@@ -1002,12 +1020,10 @@
 
         closeDeleteConfirm();
 
-        if (isSupabaseEnabled) {
+        if (isSupabaseEnabled && supabase) {
             try {
                 await supabase.from('availabilities').delete().eq('user_id', sessionUser.id);
-                
                 alert(t.deleteAccountSupabaseMsg);
-                
                 await supabase.auth.signOut();
                 logout();
             } catch (err) {
@@ -1051,7 +1067,7 @@
     }
 
     async function fetchAvailabilities() {
-        if (isSupabaseEnabled) {
+        if (isSupabaseEnabled && supabase) {
             const { data, error } = await supabase.from('availabilities').select('*');
             return error ? [] : data;
         } else {
@@ -1184,7 +1200,7 @@
         const isMyUnavailable = unavails.some(a => a.date === activeDateStr && a.user_id === sessionUser.id);
 
         if (isMyUnavailable) {
-            if (isSupabaseEnabled) {
+            if (isSupabaseEnabled && supabase) {
                 await supabase.from('availabilities').delete().eq('date', activeDateStr).eq('user_id', sessionUser.id);
             } else {
                 localAvailabilities = localAvailabilities.filter(a => !(a.date === activeDateStr && a.user_id === sessionUser.id));
@@ -1197,7 +1213,7 @@
                 return;
             }
 
-            if (isSupabaseEnabled) {
+            if (isSupabaseEnabled && supabase) {
                 await supabase.from('availabilities').insert({
                     date: activeDateStr,
                     user_id: sessionUser.id,
