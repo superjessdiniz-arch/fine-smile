@@ -979,16 +979,21 @@
         renderCalendar();
     }
 
-    function logout() {
-        sessionUser = null;
-        document.getElementById('loginScreen').classList.add('active');
-        document.getElementById('calendarScreen').classList.remove('active');
-        document.getElementById('appHeader').style.display = 'none';
-        document.getElementById('appTabBar').style.display = 'none';
-        
-        document.getElementById('emailInput').value = '';
-        document.getElementById('passwordInput').value = '';
-        document.getElementById('nameInput').value = '';
+    async function logout() {
+    if (isSupabaseEnabled) {
+        await supabase.auth.signOut();
+    }
+
+    sessionUser = null;
+
+    document.getElementById('loginScreen').classList.add('active');
+    document.getElementById('calendarScreen').classList.remove('active');
+    document.getElementById('appHeader').style.display = 'none';
+    document.getElementById('appTabBar').style.display = 'none';
+
+    document.getElementById('emailInput').value = '';
+    document.getElementById('passwordInput').value = '';
+    document.getElementById('nameInput').value = '';
     }
 
     function showDeleteConfirm() {
