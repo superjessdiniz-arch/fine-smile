@@ -7,34 +7,23 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --ios-blue: #007aff; --ios-bg: #f2f2f7; --ios-card: #ffffff; }
-        body { margin: 0; padding: 20px; background-color: var(--ios-bg); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; display: flex; justify-content: center; min-height: 100vh;}
+        body { margin: 0; padding: 20px; background-color: var(--ios-bg); font-family: -apple-system, sans-serif; display: flex; justify-content: center; min-height: 100vh;}
         .app-container { width: 100%; max-width: 400px; display: flex; flex-direction: column; }
-        
         .header { text-align: center; font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; }
-
-        /* Input */
         .name-input { width: 100%; padding: 15px; margin-bottom: 15px; border: 1px solid #d1d1d6; border-radius: 12px; box-sizing: border-box; font-size: 1rem; }
-
-        /* Navegação */
         .calendar-header { background: var(--ios-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; text-align: center; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .calendar-header button { background: none; border: none; color: var(--ios-blue); font-size: 1rem; cursor: pointer; padding: 5px 10px; }
         #monthDisplay { font-size: 1.2rem; font-weight: 700; }
-
-        /* Grid do Calendário */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; background: var(--ios-card); padding: 15px; border-radius: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        
         .day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: #f9f9f9; border-radius: 8px; font-size: 1rem; cursor: pointer; }
-        .day:active { background: #e5e5ea; }
         .day.header-day { font-weight: 600; color: #8e8e93; background: transparent; cursor: default; }
-        .day.empty { background: transparent; cursor: default; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <div class="header">ファインスマイル</div>
-
-    <input type="text" id="userName" class="name-input" placeholder="お名前を入力してください">
+    <input type="text" id="userName" class="name-input" placeholder="お名前を入力">
     
     <div class="calendar-header">
         <button onclick="changeDate('year', -1)">« 年</button>
@@ -44,70 +33,63 @@
         <button onclick="changeDate('year', 1)">年 »</button>
     </div>
 
-    <div class="calendar-grid" id="calendarGrid">
-        <!-- O calendário será gerado aqui -->
-    </div>
+    <div class="calendar-grid" id="calendarGrid"></div>
 </div>
 
 <script>
-    const SUPABASE_URL = "https://xzgctiomfdhbmadmqvtm.supabase.co"; 
-    const SUPABASE_ANON_KEY = "sb_publishable_5T2YaTeA1jhv_ofatSeSwQ_xq6tAqsI";
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    let currentDate = new Date();
-
-    function renderCalendar() {
-        const grid = document.getElementById('calendarGrid');
-        grid.innerHTML = ''; 
+    document.addEventListener('DOMContentLoaded', () => {
+        const SUPABASE_URL = "https://xzgctiomfdhbmadmqvtm.supabase.co"; 
+        const SUPABASE_ANON_KEY = "sb_publishable_5T2YaTeA1jhv_ofatSeSwQ_xq6tAqsI";
         
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
-        document.getElementById('monthDisplay').innerText = `${year}年 ${month + 1}月`;
+        // Correção: Uso correto do window.supabase
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let currentDate = new Date();
 
-        const daysOfWeek = ['日', '月', '火', '水', '木', '金', '土'];
-        daysOfWeek.forEach(day => {
-            grid.innerHTML += `<div class="day header-day">${day}</div>`;
-        });
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            const display = document.getElementById('monthDisplay');
+            grid.innerHTML = '';
+            
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            display.innerText = `${year}年 ${month + 1}月`;
 
-        const firstDay = new Date(year, month, 1).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
+            ['日', '月', '火', '水', '木', '金', '土'].forEach(d => {
+                grid.innerHTML += `<div class="day header-day">${d}</div>`;
+            });
 
-        for (let i = 0; i < firstDay; i++) {
-            grid.innerHTML += `<div class="day empty"></div>`;
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div></div>`;
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                const div = document.createElement('div');
+                div.className = 'day';
+                div.innerText = i;
+                div.onclick = () => markDate(dateStr);
+                grid.appendChild(div);
+            }
         }
 
-        for (let i = 1; i <= daysInMonth; i++) {
-            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-            grid.innerHTML += `<div class="day" onclick="markDate('${dateStr}')">${i}</div>`;
-        }
-    }
+        window.changeDate = (type, delta) => {
+            if (type === 'month') currentDate.setMonth(currentDate.getMonth() + delta);
+            else currentDate.setFullYear(currentDate.getFullYear() + delta);
+            renderCalendar();
+        };
 
-    function changeDate(type, delta) {
-        if (type === 'month') {
-            currentDate.setMonth(currentDate.getMonth() + delta);
-        } else {
-            currentDate.setFullYear(currentDate.getFullYear() + delta);
-        }
+        window.markDate = async (date) => {
+            const name = document.getElementById('userName').value;
+            if (!name) { alert("お名前を入力してください"); return; }
+            
+            const { error } = await supabase.from('availabilities').insert([{ name, date }]);
+            if (error) alert("エラー: " + error.message);
+            else alert(date + " を登録しました");
+        };
+
         renderCalendar();
-    }
-
-    async function markDate(date) {
-        const name = document.getElementById('userName').value;
-        if (!name) { 
-            alert("お名前を入力してください"); 
-            return; 
-        }
-        
-        const { error } = await supabase.from('availabilities').insert([{ name, date }]);
-        if (error) {
-            alert("エラー: " + error.message);
-        } else {
-            alert(date + " を登録しました");
-        }
-    }
-
-    // Inicializa o calendário ao carregar a página
-    window.onload = renderCalendar;
+    });
 </script>
 </body>
 </html>
