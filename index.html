@@ -4,73 +4,84 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ファインスマイル</title>
-    <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { margin: 0; padding: 0; background-color: #d1d1d6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; justify-content: center; min-height: 100vh; }
-        .phone-frame { width: 100%; max-width: 430px; background-color: #f2f2f7; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .screen { display: none; width: 100%; flex-direction: column; align-items: center; }
-        .screen.active { display: flex; }
-        .brand-title { font-size: 2rem; font-weight: 800; margin-top: 60px; margin-bottom: 40px; color: #000; text-align: center; }
-        .login-card { background: #fff; padding: 24px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 350px; }
-        .input-field { width: 100%; padding: 15px; margin-bottom: 15px; border: 1px solid #e5e5ea; border-radius: 12px; font-size: 1rem; box-sizing: border-box; }
-        .btn-primary { width: 100%; padding: 15px; background: #007aff; color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 1rem; }
-        .toggle-link { text-align: center; margin-top: 15px; color: #007aff; cursor: pointer; font-size: 0.9rem; }
+        :root { --ios-bg: #f2f2f7; --ios-blue: #007aff; }
+        body { margin: 0; background-color: var(--ios-bg); font-family: -apple-system, sans-serif; display: flex; justify-content: center; min-height: 100vh; }
+        .phone-frame { width: 100%; max-width: 430px; background: #fff; min-height: 100vh; display: flex; flex-direction: column; position: relative; }
+        
+        .screen { display: none; padding: 20px; flex-direction: column; flex-grow: 1; }
+        .active { display: flex; }
+
+        /* Estilo Login */
+        .login-container { display: flex; flex-direction: column; justify-content: center; height: 80vh; }
+        .brand { font-size: 2rem; font-weight: 800; text-align: center; margin-bottom: 40px; }
+        .input { width: 100%; padding: 15px; margin-bottom: 15px; border: 1px solid #e5e5ea; border-radius: 12px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 15px; background: var(--ios-blue); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; }
+
+        /* Estilo Calendário */
+        .header { padding: 20px; text-align: center; font-weight: bold; font-size: 1.2rem; border-bottom: 1px solid #e5e5ea; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); padding: 10px; gap: 5px; }
+        .day-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: #f2f2f7; border-radius: 8px; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
 <div class="phone-frame">
-    <div class="screen active" id="loginScreen">
-        <div class="brand-title">ファインスマイル</div>
-        <div class="login-card">
-            <h2 id="formTitle" style="text-align: center; margin-bottom: 20px; font-size: 1.2rem;">ログイン</h2>
-            <input type="email" id="emailInput" class="input-field" placeholder="メールアドレス">
-            <input type="password" id="passwordInput" class="input-field" placeholder="パスワード">
-            <input type="text" id="nameInput" class="input-field" placeholder="お名前" style="display:none;">
-            <button class="btn-primary" id="mainSubmitBtn" onclick="submitAuthForm()">ログイン</button>
-            <p class="toggle-link" id="toggleAuthLink" onclick="toggleAuthMode()">アカウント作成はこちら</p>
+    <!-- TELA DE LOGIN -->
+    <div id="loginScreen" class="screen active">
+        <div class="login-container">
+            <div class="brand">ファインスマイル</div>
+            <h2 id="formTitle" style="text-align:center;">ログイン</h2>
+            <input type="email" id="emailInput" class="input" placeholder="メールアドレス">
+            <input type="password" id="passwordInput" class="input" placeholder="パスワード">
+            <button class="btn" id="mainSubmitBtn" onclick="submitAuthForm()">ログイン</button>
+            <p id="toggleAuthLink" onclick="toggleAuthMode()" style="text-align:center; margin-top:15px; color:var(--ios-blue); cursor:pointer;">アカウント作成はこちら</p>
         </div>
     </div>
 
-    <div class="screen" id="calendarScreen">
-        <h1 style="margin-top: 50px;">勤務カレンダー</h1>
-        <button class="btn-primary" style="background:#ff3b30; width: 200px; margin-top: 20px;" onclick="logout()">ログアウト</button>
+    <!-- TELA DO CALENDÁRIO -->
+    <div id="calendarScreen" class="screen">
+        <div class="header">ファインスマイル</div>
+        <div class="calendar-grid">
+            <div class="day-cell" style="color:#8e8e93">日</div><div class="day-cell" style="color:#8e8e93">月</div>
+            <div class="day-cell" style="color:#8e8e93">火</div><div class="day-cell" style="color:#8e8e93">水</div>
+            <div class="day-cell" style="color:#8e8e93">木</div><div class="day-cell" style="color:#8e8e93">金</div>
+            <div class="day-cell" style="color:#8e8e93">土</div>
+            <script>
+                for(let i = 1; i <= 31; i++) document.write(`<div class="day-cell">${i}</div>`);
+            </script>
+        </div>
+        <button class="btn" style="margin:20px; width:calc(100% - 40px); background:#ff3b30;" onclick="location.reload()">ログアウト</button>
     </div>
 </div>
 
 <script>
     const SUPABASE_URL = "https://xzgctiomfdhbmadmqvtm.supabase.co"; 
     const SUPABASE_ANON_KEY = "sb_publishable_5T2YaTeA1jhv_ofatSeSwQ_xq6tAqsI";
-    
-    // CORREÇÃO: Usar apenas supabase.createClient, não window.supabase
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
     let authMode = 'login';
 
     function toggleAuthMode() {
-        authMode = authMode === 'login' ? 'register' : 'login';
-        document.getElementById('formTitle').innerText = authMode === 'login' ? 'ログイン' : 'アカウント作成';
-        document.getElementById('nameInput').style.display = authMode === 'login' ? 'none' : 'block';
-        document.getElementById('mainSubmitBtn').innerText = authMode === 'login' ? 'ログイン' : 'アカウント作成';
-        document.getElementById('toggleAuthLink').innerText = authMode === 'login' ? 'アカウント作成はこちら' : 'ログインはこちら';
+        authMode = (authMode === 'login') ? 'register' : 'login';
+        document.getElementById('formTitle').innerText = (authMode === 'login') ? 'ログイン' : 'アカウント作成';
+        document.getElementById('mainSubmitBtn').innerText = (authMode === 'login') ? 'ログイン' : 'アカウント作成';
+        document.getElementById('toggleAuthLink').innerText = (authMode === 'login') ? 'アカウント作成はこちら' : 'ログインはこちら';
     }
 
     async function submitAuthForm() {
         const email = document.getElementById('emailInput').value;
         const password = document.getElementById('passwordInput').value;
-        const name = document.getElementById('nameInput').value;
 
         try {
             if (authMode === 'register') {
-                const { error } = await supabase.auth.signUp({ 
-                    email, password, options: { data: { full_name: name } } 
-                });
+                const { error } = await supabase.auth.signUp({ email, password });
                 if (error) throw error;
                 alert("登録完了！");
                 toggleAuthMode();
             } else {
-                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) throw error;
                 document.getElementById('loginScreen').classList.remove('active');
                 document.getElementById('calendarScreen').classList.add('active');
@@ -79,8 +90,6 @@
             alert("エラー: " + err.message);
         }
     }
-
-    function logout() { location.reload(); }
 </script>
 </body>
 </html>
