@@ -144,6 +144,10 @@
             box-shadow: 0 0 2px rgba(0,0,0,0.3);
         }
 
+        .avatar-wrapper.has-photo::after {
+            display: none;
+        }
+
         .delete-account-btn {
             background: none;
             border: none;
@@ -783,7 +787,7 @@
 <body>
 
 <div class="phone-frame">
-   <div class="demo-banner" id="demoBanner">Supabaseを使用しています（データはクラウドで共有されます）</div>
+    <div class="demo-banner" id="demoBanner">Usando Supabase (Dados na nuvem compartilhados)</div>
 
     <div class="app-header" id="appHeader" style="display: none;">
         <span class="header-left" id="headerTitle">ファインスマイル</span>
@@ -1532,17 +1536,20 @@ if (userRoleLabel) {
     function updateHeaderAvatar() {
         const img = document.getElementById('userAvatarImg');
         const initial = document.getElementById('userAvatarInitial');
-        if (!img || !initial) return;
+        const wrapper = document.getElementById('avatarWrapper');
+        if (!img || !initial || !wrapper) return;
 
         if (sessionUser?.avatar_url) {
             img.src = sessionUser.avatar_url;
             img.style.display = 'block';
             initial.style.display = 'none';
+            wrapper.classList.add('has-photo');
         } else {
             img.removeAttribute('src');
             img.style.display = 'none';
             initial.style.display = 'block';
             initial.innerText = (sessionUser?.name || '?').trim().charAt(0).toUpperCase();
+            wrapper.classList.remove('has-photo');
         }
     }
 
