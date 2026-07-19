@@ -1034,10 +1034,18 @@ sessionUser = {
 
 document.getElementById('userNameLabel').innerText = sessionUser.name;
 document.getElementById('userRoleLabel').innerText =
-    sessionUser.role === '管理者' ? t.adminBadge : t.staffBadge;
+    const userRoleLabel = document.getElementById('userRoleLabel');
 
-document.getElementById('userRoleLabel').className =
-    `role-badge ${sessionUser.role === '管理者' ? '' : 'staff'}`;
+if (userRoleLabel && sessionUser) {
+    const isAdmin = sessionUser.role === '管理者';
+
+    userRoleLabel.innerText = isAdmin
+        ? t.adminBadge
+        : t.staffBadge;
+
+    userRoleLabel.className =
+        `role-badge ${isAdmin ? '' : 'staff'}`;
+}
 
         renderCalendar();
     }
