@@ -769,7 +769,9 @@
     
     const SUPABASE_ANON_KEY = "sb_publishable_5T2YaTeA1jhv_ofatSeSwQ_xq6tAqsI";
     let appSupabase = null;
-     const isSupabaseEnabled =
+    
+    const isSupabaseEnabled =
+    
     SUPABASE_URL !== "" &&
     SUPABASE_ANON_KEY !== "";
 
@@ -940,7 +942,7 @@
         if (isSupabaseEnabled) {
             try {
                 if (authMode === 'register') {
-                    const { data, error } = await supabase.auth.signUp({
+                    const { data, error } = await appSupabase.auth.signUp({
                         email,
                         password,
                         options: { data: { full_name: name, role: 'スタッフ' } }
@@ -960,7 +962,7 @@
                     showAuthStatus(t.alertSuccessReg, false);
                     setTimeout(toggleAuthMode, 1500);
                 } else {
-                    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                    const { data, error } = await appSupabase.auth.signInWithPassword({ email, password });
                     if (error) throw error;
                     
                     const userMeta = data.user.user_metadata;
@@ -1028,7 +1030,7 @@
 
     async function logout() {
     if (isSupabaseEnabled) {
-        await supabase.auth.signOut();
+        await appSupabase.auth.signOut();
     }
 
     sessionUser = null;
@@ -1058,11 +1060,11 @@
 
         if (isSupabaseEnabled) {
             try {
-                await supabase.from('availabilities').delete().eq('user_id', sessionUser.id);
+                await appSupabase.from('availabilities').delete().eq('user_id', sessionUser.id);
                 
                 alert(t.deleteAccountSupabaseMsg);
                 
-                await supabase.auth.signOut();
+                await appSupabase.auth.signOut();
                 logout();
             } catch (err) {
                 alert(err.message);
@@ -1106,7 +1108,7 @@
 
     async function fetchAvailabilities() {
         if (isSupabaseEnabled) {
-            const { data, error } = await supabase.from('availabilities').select('*');
+            const { data, error } = await appSupabase.from('availabilities').select('*');
             return error ? [] : data;
         } else {
             return localAvailabilities;
@@ -1239,7 +1241,7 @@
 
         if (isMyUnavailable) {
             if (isSupabaseEnabled) {
-                await supabase.from('availabilities').delete().eq('date', activeDateStr).eq('user_id', sessionUser.id);
+                await appSupabase.from('availabilities').delete().eq('date', activeDateStr).eq('user_id', sessionUser.id);
             } else {
                 localAvailabilities = localAvailabilities.filter(a => !(a.date === activeDateStr && a.user_id === sessionUser.id));
                 localStorage.setItem('fs_avails', JSON.stringify(localAvailabilities));
@@ -1252,7 +1254,7 @@
             }
 
             if (isSupabaseEnabled) {
-                await supabase.from('availabilities').insert({
+                await appSupabase.from('availabilities').insert({
                     date: activeDateStr,
                     user_id: sessionUser.id,
                     user_name: sessionUser.name,
