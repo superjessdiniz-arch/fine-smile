@@ -47,7 +47,15 @@
             box-shadow: 0 0 30px rgba(0,0,0,0.15);
         }
 
-.demo-banner { background-color: #ff9500; color: white; text-align: center; font-size: 0.75rem; font-weight: bold; padding: 4px 0; z-index: 11; }
+        .demo-banner {
+            background-color: #ff9500;
+            color: white;
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 4px 0;
+            z-index: 11;
+        }
 
         .app-header {
             background-color: rgba(255, 255, 255, 0.85);
@@ -639,9 +647,8 @@
 </head>
 <body>
 
-<div class="demo-banner" id="demoBanner">
-    Supabaseクラウドデータを使用中
-</div>
+<div class="phone-frame">
+    <div class="demo-banner" id="demoBanner">Supabaseクラウドデータを使用中</div>
 
     <div class="app-header" id="appHeader" style="display: none;">
         <span class="header-left" id="headerTitle">ファインスマイル</span>
@@ -1024,41 +1031,13 @@ sessionUser = {
     console.error("sessionUser está nulo.");
     return;
 }
-if (!sessionUser) {
-    console.error('Usuário da sessão não encontrado.');
-    return;
-}
 
-const userNameLabel = document.getElementById('userNameLabel');
-const userRoleLabel = document.getElementById('userRoleLabel');
+document.getElementById('userNameLabel').innerText = sessionUser.name;
+document.getElementById('userRoleLabel').innerText =
+    sessionUser.role === '管理者' ? t.adminBadge : t.staffBadge;
 
-if (userNameLabel) {
-    userNameLabel.innerText = sessionUser.name || '';
-}
-
-const userNameLabel = document.getElementById('userNameLabel');
-const userRoleLabel = document.getElementById('userRoleLabel');
-
-if (!sessionUser) {
-    console.error('sessionUser não encontrado.');
-    return;
-}
-
-if (userNameLabel) {
-    userNameLabel.innerText = sessionUser.name || '';
-}
-
-if (userRoleLabel) {
-    const isAdmin = sessionUser.role === '管理者';
-
-    userRoleLabel.innerText = isAdmin
-        ? t.adminBadge
-        : t.staffBadge;
-
-    userRoleLabel.className =
-        `role-badge ${isAdmin ? '' : 'staff'}`;
-
-}
+document.getElementById('userRoleLabel').className =
+    `role-badge ${sessionUser.role === '管理者' ? '' : 'staff'}`;
 
         renderCalendar();
     }
