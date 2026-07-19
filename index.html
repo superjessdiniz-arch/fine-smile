@@ -1227,7 +1227,13 @@ sessionUser = {
 dayUnavails.forEach(u => {
 
     // Funcionário só pode ver o próprio nome
-    if (sessionUser.role !== "管理者" && u.user_id !== sessionUser.id) {
+if (!sessionUser) {
+    return;
+}
+
+if (sessionUser.role !== "管理者" && u.user_id !== sessionUser.id) {
+    return;
+}
         return;
     }
 
