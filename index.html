@@ -1228,10 +1228,6 @@ if (userRoleLabel) {
         const staffList = document.getElementById('modalStaffList');
         staffList.innerHTML = '';
 
-       document.getElementById('modalDateTitle').innerText = getFormattedDate(dateStr);
-const staffList = document.getElementById('modalStaffList');
-staffList.innerHTML = '';
-
 if (dayUnavails.length === 0) {
     staffList.innerHTML = `<div class="no-staff-txt" id="noStaffMsg">${t.noStaff}</div>`;
 } else {
