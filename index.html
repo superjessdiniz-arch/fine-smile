@@ -856,9 +856,8 @@
     let localAvailabilities = JSON.parse(localStorage.getItem('fs_avails')) || [];
 
     window.onload = function() {
-        applyTranslations();
-        renderCalendar();
-    };
+    applyTranslations();
+};
 
     function showAuthStatus(message, isError) {
         const el = document.getElementById('authStatusMsg');
