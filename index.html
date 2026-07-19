@@ -976,7 +976,7 @@ sessionUser = {
     name: userMeta.full_name || "Fine Smile 管理者",
     role: data.user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()
         ? "管理者"
-        : (userMeta.role || "スタッフ")
+        : (userMeta.role || "管理者")
 };
                     enterApp();
                 }
