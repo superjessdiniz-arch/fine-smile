@@ -1026,15 +1026,23 @@ sessionUser = {
         document.getElementById('appHeader').style.display = 'flex';
         document.getElementById('appTabBar').style.display = 'flex';
 
-        document.getElementById('userNameLabel').innerText = sessionUser.name;
-        if (userRoleLabel) {
-    userRoleLabel.innerText =
-        sessionUser?.role === '管理者'
-            ? t.adminBadge
-            : t.staffBadge;
+        const userNameLabel = document.getElementById('userNameLabel');
+const userRoleLabel = document.getElementById('userRoleLabel');
+
+if (userNameLabel) {
+    userNameLabel.innerText = sessionUser?.name || '';
 }
-        document.getElementById('userRoleLabel').className =
-    `role-badge ${sessionUser?.role === '管理者' ? '' : 'staff'}`;
+
+if (userRoleLabel) {
+    const isAdmin = sessionUser?.role === '管理者';
+
+    userRoleLabel.innerText = isAdmin
+        ? t.adminBadge
+        : t.staffBadge;
+
+    userRoleLabel.className =
+        `role-badge ${isAdmin ? '' : 'staff'}`;
+}
 
         renderCalendar();
     }
@@ -1233,8 +1241,6 @@ if (!sessionUser) {
 if (sessionUser.role !== "管理者" && u.user_id !== sessionUser.id) {
     return;
 }
-        return;
-    }
 
     const row = document.createElement('div');
     row.className = 'sheet-staff-row';
