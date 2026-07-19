@@ -720,6 +720,15 @@
         .delete-modal-btn:active {
             opacity: 0.8;
         }
+
+        .forgot-password-link {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--ios-blue);
+            text-align: right;
+            cursor: pointer;
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body>
@@ -754,6 +763,7 @@
                 <div class="input-group" id="passwordGroup">
                     <label id="passLabel">パスワード</label>
                     <input type="password" class="input-field" id="passwordInput" placeholder="••••••••••••">
+                    <p class="forgot-password-link" id="forgotPasswordLink" onclick="openForgotPasswordModal()">パスワードをお忘れですか？</p>
                 </div>
 
                 <div class="input-group" id="nameGroup" style="display: none;">
@@ -849,6 +859,36 @@
             </div>
         </div>
     </div>
+
+    <!-- Forgot Password Modal -->
+    <div class="delete-modal" id="forgotPasswordModal">
+        <div class="delete-modal-content">
+            <div class="delete-modal-title" id="forgotTitle">パスワード再設定</div>
+            <div class="delete-modal-text" id="forgotText">登録済みのメールアドレスを入力してください。再設定用のリンクをお送りします。</div>
+            <div class="input-group" style="margin-bottom:16px;">
+                <input type="email" class="input-field" id="forgotEmailInput" placeholder="example@gmail.com">
+            </div>
+            <div class="delete-modal-buttons">
+                <button class="delete-modal-btn cancel" onclick="closeForgotPasswordModal()" id="forgotCancelBtn">キャンセル</button>
+                <button class="delete-modal-btn confirm" onclick="submitForgotPassword()" id="forgotSubmitBtn" style="background-color: var(--ios-blue);">送信</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Password Modal (aberto automaticamente ao voltar pelo link do e-mail) -->
+    <div class="delete-modal" id="resetPasswordModal">
+        <div class="delete-modal-content">
+            <div class="delete-modal-title" id="resetTitle">新しいパスワード</div>
+            <div class="delete-modal-text" id="resetText">新しいパスワードを入力してください。</div>
+            <div class="input-group" style="margin-bottom:16px;">
+                <input type="password" class="input-field" id="newPasswordInput" placeholder="••••••••••••">
+            </div>
+            <div class="delete-modal-buttons">
+                <button class="delete-modal-btn cancel" onclick="cancelResetPassword()" id="resetCancelBtn">キャンセル</button>
+                <button class="delete-modal-btn confirm" onclick="confirmNewPassword()" id="resetConfirmBtn" style="background-color: var(--ios-blue);">更新</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -865,6 +905,14 @@
     if (isSupabaseEnabled) {
         appSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         document.getElementById('demoBanner').style.display = 'none';
+
+        // Quando o usuário clica no link de redefinição de senha recebido por e-mail,
+        // o Supabase abre esta mesma página com uma sessão temporária e dispara este evento.
+        appSupabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'PASSWORD_RECOVERY') {
+                document.getElementById('resetPasswordModal').classList.add('active');
+            }
+        });
     } else {
         document.getElementById('demoBanner').style.display = 'block';
     }
@@ -900,7 +948,21 @@
             reasonOther: "その他",
             alertSelectReason: "理由を選択してください。",
             deleteAccountSuccess: "アカウントが完全に削除されました！",
-            deleteAccountSupabaseMsg: "スケジュールデータが削除されました。サインイン用アカウントの完全削除は管理者に依頼してください。"
+            deleteAccountSupabaseMsg: "スケジュールデータが削除されました。サインイン用アカウントの完全削除は管理者に依頼してください。",
+            forgotPasswordLink: "パスワードをお忘れですか？",
+            forgotTitle: "パスワード再設定",
+            forgotText: "登録済みのメールアドレスを入力してください。再設定用のリンクをお送りします。",
+            forgotCancel: "キャンセル",
+            forgotSubmit: "送信",
+            resetTitle: "新しいパスワード",
+            resetText: "新しいパスワードを入力してください。",
+            resetCancel: "キャンセル",
+            resetConfirm: "更新",
+            alertEnterEmail: "メールアドレスを入力してください。",
+            alertResetSent: "このメールアドレスが登録されていれば、パスワード再設定用のリンクを送信しました。",
+            alertPasswordTooShort: "パスワードは6文字以上にしてください。",
+            alertPasswordUpdated: "パスワードが更新されました。再度ログインしてください。",
+            forgotOfflineMsg: "この機能はクラウド（Supabase）モードでのみ利用できます。"
         },
         pt: {
             brandTitle: "Fine Smile",
@@ -932,7 +994,21 @@
             reasonOther: "Outro motivo",
             alertSelectReason: "Por favor, selecione um motivo.",
             deleteAccountSuccess: "Sua conta foi permanentemente excluída!",
-            deleteAccountSupabaseMsg: "Suas ausências foram removidas. Para apagar definitivamente seu login do Supabase, solicite ao administrador de TI."
+            deleteAccountSupabaseMsg: "Suas ausências foram removidas. Para apagar definitivamente seu login do Supabase, solicite ao administrador de TI.",
+            forgotPasswordLink: "Esqueceu a senha?",
+            forgotTitle: "Redefinir Senha",
+            forgotText: "Digite seu e-mail cadastrado. Enviaremos um link para redefinir sua senha.",
+            forgotCancel: "Cancelar",
+            forgotSubmit: "Enviar",
+            resetTitle: "Nova Senha",
+            resetText: "Digite sua nova senha.",
+            resetCancel: "Cancelar",
+            resetConfirm: "Atualizar",
+            alertEnterEmail: "Por favor, digite seu e-mail.",
+            alertResetSent: "Se este e-mail estiver cadastrado, enviamos um link para redefinir a senha.",
+            alertPasswordTooShort: "A senha deve ter pelo menos 6 caracteres.",
+            alertPasswordUpdated: "Senha atualizada com sucesso! Faça login novamente.",
+            forgotOfflineMsg: "Este recurso só está disponível no modo nuvem (Supabase)."
         }
     };
 
@@ -994,7 +1070,17 @@
         document.getElementById('deleteModalText').innerText = t.confirmDelete;
         document.getElementById('deleteCancelBtn').innerText = lang === 'pt' ? 'Cancelar' : 'キャンセル';
         document.getElementById('deleteConfirmBtn').innerText = lang === 'pt' ? 'Excluir' : '削除';
-        
+
+        document.getElementById('forgotPasswordLink').innerText = t.forgotPasswordLink;
+        document.getElementById('forgotTitle').innerText = t.forgotTitle;
+        document.getElementById('forgotText').innerText = t.forgotText;
+        document.getElementById('forgotCancelBtn').innerText = t.forgotCancel;
+        document.getElementById('forgotSubmitBtn').innerText = t.forgotSubmit;
+        document.getElementById('resetTitle').innerText = t.resetTitle;
+        document.getElementById('resetText').innerText = t.resetText;
+        document.getElementById('resetCancelBtn').innerText = t.resetCancel;
+        document.getElementById('resetConfirmBtn').innerText = t.resetConfirm;
+
         updateAuthDOM();
     }
 
@@ -1014,6 +1100,11 @@
             document.getElementById('nameGroup').style.display = 'flex';
             document.getElementById('mainSubmitBtn').innerText = t.register;
             document.getElementById('toggleAuthLink').innerHTML = t.toggleToLogin;
+        }
+
+        const forgotLink = document.getElementById('forgotPasswordLink');
+        if (forgotLink) {
+            forgotLink.style.display = (authMode === 'login' && isSupabaseEnabled) ? 'block' : 'none';
         }
     }
 
@@ -1301,6 +1392,67 @@ if (userRoleLabel) {
         });
     }
 
+    function openForgotPasswordModal() {
+        if (!isSupabaseEnabled) {
+            alert(t.forgotOfflineMsg);
+            return;
+        }
+        document.getElementById('forgotEmailInput').value = document.getElementById('emailInput').value || '';
+        document.getElementById('forgotPasswordModal').classList.add('active');
+    }
+
+    function closeForgotPasswordModal() {
+        document.getElementById('forgotPasswordModal').classList.remove('active');
+    }
+
+    async function submitForgotPassword() {
+        const email = document.getElementById('forgotEmailInput').value.trim().toLowerCase();
+
+        if (!email) {
+            alert(t.alertEnterEmail);
+            return;
+        }
+
+        try {
+            const { error } = await appSupabase.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.href.split('#')[0]
+            });
+            if (error) throw error;
+
+            alert(t.alertResetSent);
+            closeForgotPasswordModal();
+        } catch (err) {
+            alert('Erro: ' + err.message);
+        }
+    }
+
+    async function cancelResetPassword() {
+        document.getElementById('resetPasswordModal').classList.remove('active');
+        document.getElementById('newPasswordInput').value = '';
+        await appSupabase.auth.signOut();
+    }
+
+    async function confirmNewPassword() {
+        const newPassword = document.getElementById('newPasswordInput').value;
+
+        if (!newPassword || newPassword.length < 6) {
+            alert(t.alertPasswordTooShort);
+            return;
+        }
+
+        try {
+            const { error } = await appSupabase.auth.updateUser({ password: newPassword });
+            if (error) throw error;
+
+            alert(t.alertPasswordUpdated);
+            document.getElementById('newPasswordInput').value = '';
+            document.getElementById('resetPasswordModal').classList.remove('active');
+            await appSupabase.auth.signOut();
+        } catch (err) {
+            alert('Erro: ' + err.message);
+        }
+    }
+
     function adjustMonth(offset) {
         focusDate.setMonth(focusDate.getMonth() + offset);
         renderCalendar();
@@ -1390,7 +1542,7 @@ if (userRoleLabel) {
             if (visibleUnavails.length > 0) {
                 const badgesList = document.createElement('div');
                 badgesList.className = 'badges-list';
-                const maxVisible = 3;
+                const maxVisible = 2;
 
                 visibleUnavails.slice(0, maxVisible).forEach(u => {
                     const badge = document.createElement('div');
