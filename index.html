@@ -523,6 +523,83 @@
             font-size: 1.4rem;
         }
 
+        .admin-page-title {
+            font-size: 1.7rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            padding: 4px 4px 0 4px;
+        }
+
+        .admin-list-scroll {
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+            overflow-y: auto;
+        }
+
+        .admin-section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--ios-grey);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            padding: 0 4px 6px 4px;
+        }
+
+        .admin-section-card {
+            background-color: var(--ios-card);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+        }
+
+        .admin-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--ios-border);
+        }
+
+        .admin-row:last-child {
+            border-bottom: none;
+        }
+
+        .admin-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background-color: var(--ios-blue);
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .admin-row-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            flex-grow: 1;
+        }
+
+        .admin-row-reason {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--ios-red);
+            background-color: var(--ios-red-light);
+            padding: 3px 9px;
+            border-radius: 100px;
+            white-space: nowrap;
+        }
+
+        .badge-pill.badge-more {
+            background-color: #e5e5ea;
+            color: var(--ios-grey);
+        }
+
         .reason-group {
             display: flex;
             flex-direction: column;
@@ -706,10 +783,20 @@
         </div>
     </div>
 
+    <div class="screen" id="adminListScreen">
+        <h1 class="admin-page-title" id="adminListTitle">出勤不可一覧</h1>
+        <div class="admin-list-scroll" id="adminListScroll">
+        </div>
+    </div>
+
     <div class="tab-bar" id="appTabBar" style="display: none;">
-        <div class="tab-item active">
+        <div class="tab-item active" id="tabCalendarBtn" onclick="switchTab('calendar')">
             <span class="tab-icon">📅</span>
             <span id="tabCalendarLabel">カレンダー</span>
+        </div>
+        <div class="tab-item" id="tabAdminBtn" onclick="switchTab('admin')" style="display: none;">
+            <span class="tab-icon">📋</span>
+            <span id="tabAdminLabel">一覧</span>
         </div>
     </div>
 
@@ -794,6 +881,9 @@
             toggleToRegister: "アカウントをお持ちでないですか？ <span>アカウント作成</span>",
             toggleToLogin: "すでにアカウントをお持ちですか？ <span>ログイン</span>",
             tabCalendar: "カレンダー",
+            tabAdmin: "一覧",
+            adminListTitle: "出勤不可一覧",
+            noRecordsAdmin: "登録された休みはありません。",
             modalSection: "出勤不可スタッフ",
             btnMakeUnavailable: "この日を出勤不可にする",
             btnRemoveUnavailable: "出勤不可を取り消す",
@@ -823,6 +913,9 @@
             toggleToRegister: "Não tem uma conta? <span>Criar Conta</span>",
             toggleToLogin: "Já possui uma conta? <span>Entrar</span>",
             tabCalendar: "Calendário",
+            tabAdmin: "Lista",
+            adminListTitle: "Lista de Ausências",
+            noRecordsAdmin: "Nenhuma ausência registrada.",
             modalSection: "Funcionários que Não Vão ao Trabalho",
             btnMakeUnavailable: "Não vou trabalhar neste dia",
             btnRemoveUnavailable: "Cancelar ausência",
@@ -886,6 +979,8 @@
         document.getElementById('passLabel').innerText = t.password;
         document.getElementById('nameLabel').innerText = t.name;
         document.getElementById('tabCalendarLabel').innerText = t.tabCalendar;
+        document.getElementById('tabAdminLabel').innerText = t.tabAdmin;
+        document.getElementById('adminListTitle').innerText = t.adminListTitle;
         document.getElementById('modalSectionLabel').innerText = t.modalSection;
         document.getElementById('reasonGroupLabel').innerText = t.reasonGroup;
         document.getElementById('reasonIllnessLabel').innerText = t.reasonIllness;
@@ -975,7 +1070,7 @@ sessionUser = {
     name: userMeta.full_name || "Fine Smile 管理者",
     role: data.user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()
         ? "管理者"
-        : (userMeta.role || "管理者")
+        : (userMeta.role || "スタッフ")
 };
                     enterApp();
                 }
@@ -1042,9 +1137,14 @@ if (userRoleLabel) {
 
     userRoleLabel.className =
         `role-badge ${isAdmin ? '' : 'staff'}`;
+
+    const tabAdminBtn = document.getElementById('tabAdminBtn');
+    if (tabAdminBtn) {
+        tabAdminBtn.style.display = isAdmin ? 'flex' : 'none';
+    }
 }
 
-        renderCalendar();
+        switchTab('calendar');
     }
 
     async function logout() {
@@ -1058,6 +1158,9 @@ if (userRoleLabel) {
     document.getElementById('calendarScreen').classList.remove('active');
     document.getElementById('appHeader').style.display = 'none';
     document.getElementById('appTabBar').style.display = 'none';
+
+    const tabAdminBtn = document.getElementById('tabAdminBtn');
+    if (tabAdminBtn) tabAdminBtn.style.display = 'none';
 
     document.getElementById('emailInput').value = '';
     document.getElementById('passwordInput').value = '';
@@ -1098,6 +1201,104 @@ if (userRoleLabel) {
             alert(t.deleteAccountSuccess);
             logout();
         }
+    }
+
+    function switchTab(tabName) {
+        const isAdmin = sessionUser?.role === '管理者';
+        if (tabName === 'admin' && !isAdmin) {
+            // Segurança extra: mesmo que alguém force a chamada via console,
+            // um não-admin nunca acessa a tela de lista.
+            tabName = 'calendar';
+        }
+
+        document.getElementById('tabCalendarBtn').classList.toggle('active', tabName === 'calendar');
+        document.getElementById('tabAdminBtn').classList.toggle('active', tabName === 'admin');
+        document.getElementById('calendarScreen').classList.toggle('active', tabName === 'calendar');
+        document.getElementById('adminListScreen').classList.toggle('active', tabName === 'admin');
+
+        if (tabName === 'calendar') {
+            renderCalendar();
+        } else {
+            renderAdminList();
+        }
+    }
+
+    async function renderAdminList() {
+        const container = document.getElementById('adminListScroll');
+        container.innerHTML = '';
+
+        if (sessionUser?.role !== '管理者') {
+            return;
+        }
+
+        const unavails = await fetchAvailabilities();
+
+        if (unavails.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'no-staff-txt';
+            empty.innerText = t.noRecordsAdmin;
+            container.appendChild(empty);
+            return;
+        }
+
+        const sorted = [...unavails].sort((a, b) => a.date.localeCompare(b.date));
+
+        const groups = {};
+        const groupOrder = [];
+        sorted.forEach(u => {
+            if (!groups[u.date]) {
+                groups[u.date] = [];
+                groupOrder.push(u.date);
+            }
+            groups[u.date].push(u);
+        });
+
+        const reasonLabels = {
+            illness: t.reasonIllness,
+            vacation: t.reasonVacation,
+            dayoff: t.reasonDayoff,
+            other: t.reasonOther
+        };
+
+        groupOrder.forEach(dateStr => {
+            const section = document.createElement('div');
+
+            const title = document.createElement('div');
+            title.className = 'admin-section-title';
+            title.innerText = getFormattedDate(dateStr);
+            section.appendChild(title);
+
+            const card = document.createElement('div');
+            card.className = 'admin-section-card';
+
+            groups[dateStr].forEach(u => {
+                const row = document.createElement('div');
+                row.className = 'admin-row';
+
+                const avatar = document.createElement('div');
+                avatar.className = 'admin-avatar';
+                avatar.innerText = (u.user_name || '?').trim().charAt(0).toUpperCase();
+
+                const name = document.createElement('span');
+                name.className = 'admin-row-name';
+                name.innerText = u.user_name;
+
+                row.appendChild(avatar);
+                row.appendChild(name);
+
+                if (u.reason && reasonLabels[u.reason]) {
+                    const reasonTag = document.createElement('span');
+                    reasonTag.className = 'admin-row-reason';
+                    reasonTag.innerText = reasonLabels[u.reason];
+                    row.appendChild(reasonTag);
+                }
+
+                card.appendChild(row);
+            });
+
+            section.appendChild(card);
+            container.appendChild(section);
+        });
     }
 
     function adjustMonth(offset) {
@@ -1179,21 +1380,33 @@ if (userRoleLabel) {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const dayUnavails = unavails.filter(a => a.date === dateStr);
 
+            // Filtra por permissão ANTES de limitar a quantidade exibida:
+            // um funcionário só pode ver a própria ausência; o admin vê todas.
+            const visibleUnavails = dayUnavails.filter(u =>
+                sessionUser?.role === "管理者" || u.user_id === sessionUser?.id
+            );
+
             cell.innerHTML = `<div class="day-num-box"><span class="day-num">${day}</span></div>`;
-            if (dayUnavails.length > 0) {
+            if (visibleUnavails.length > 0) {
                 const badgesList = document.createElement('div');
                 badgesList.className = 'badges-list';
-             dayUnavails.slice(0, 3).forEach(u => {
+                const maxVisible = 3;
 
-    if (sessionUser?.role !== "管理者" && u.user_id !== sessionUser?.id) {
-    return;
-}
+                visibleUnavails.slice(0, maxVisible).forEach(u => {
+                    const badge = document.createElement('div');
+                    badge.className = 'badge-pill';
+                    badge.innerText = u.user_name;
+                    badgesList.appendChild(badge);
+                });
 
-    const badge = document.createElement('div');
-    badge.className = 'badge-pill';
-    badge.innerText = u.user_name;
-    badgesList.appendChild(badge);
-});
+                const remaining = visibleUnavails.length - maxVisible;
+                if (remaining > 0) {
+                    const moreBadge = document.createElement('div');
+                    moreBadge.className = 'badge-pill badge-more';
+                    moreBadge.innerText = lang === 'pt' ? `+${remaining}` : `他${remaining}名`;
+                    badgesList.appendChild(moreBadge);
+                }
+
                 cell.appendChild(badgesList);
             }
 
