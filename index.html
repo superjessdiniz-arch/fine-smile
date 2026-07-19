@@ -1031,13 +1031,41 @@ sessionUser = {
     console.error("sessionUser está nulo.");
     return;
 }
+if (!sessionUser) {
+    console.error('Usuário da sessão não encontrado.');
+    return;
+}
 
-document.getElementById('userNameLabel').innerText = sessionUser.name;
-document.getElementById('userRoleLabel').innerText =
-    sessionUser.role === '管理者' ? t.adminBadge : t.staffBadge;
+const userNameLabel = document.getElementById('userNameLabel');
+const userRoleLabel = document.getElementById('userRoleLabel');
 
-document.getElementById('userRoleLabel').className =
-    `role-badge ${sessionUser.role === '管理者' ? '' : 'staff'}`;
+if (userNameLabel) {
+    userNameLabel.innerText = sessionUser.name || '';
+}
+
+const userNameLabel = document.getElementById('userNameLabel');
+const userRoleLabel = document.getElementById('userRoleLabel');
+
+if (!sessionUser) {
+    console.error('sessionUser não encontrado.');
+    return;
+}
+
+if (userNameLabel) {
+    userNameLabel.innerText = sessionUser.name || '';
+}
+
+if (userRoleLabel) {
+    const isAdmin = sessionUser.role === '管理者';
+
+    userRoleLabel.innerText = isAdmin
+        ? t.adminBadge
+        : t.staffBadge;
+
+    userRoleLabel.className =
+        `role-badge ${isAdmin ? '' : 'staff'}`;
+
+}
 
         renderCalendar();
     }
