@@ -1228,32 +1228,31 @@ if (userRoleLabel) {
         const staffList = document.getElementById('modalStaffList');
         staffList.innerHTML = '';
 
-        if (dayUnavails.length === 0) {
-            staffList.innerHTML = `<div class="no-staff-txt" id="noStaffMsg">${t.noStaff}</div>`;
-        } else {
-        } else {
-            dayUnavails.forEach(u => {
+       document.getElementById('modalDateTitle').innerText = getFormattedDate(dateStr);
+const staffList = document.getElementById('modalStaffList');
+staffList.innerHTML = '';
 
-                if (!sessionUser) {
-                    return;
-                }
+if (dayUnavails.length === 0) {
+    staffList.innerHTML = `<div class="no-staff-txt" id="noStaffMsg">${t.noStaff}</div>`;
+} else {
+    dayUnavails.forEach(u => {
 
-                if (sessionUser.role !== "管理者" && u.user_id !== sessionUser.id) {
-                    return;
-                }
-
-                const row = document.createElement('div');
-                row.className = 'sheet-staff-row';
-                row.innerText = u.user_name;
-                staffList.appendChild(row);
-
-            });
+        // Funcionário só pode ver o próprio nome
+        if (!sessionUser) {
+            return;
         }
-    row.className = 'sheet-staff-row';
-    row.innerText = u.user_name;
-    staffList.appendChild(row);
-});
+
+        if (sessionUser.role !== "管理者" && u.user_id !== sessionUser.id) {
+            return;
         }
+
+        const row = document.createElement('div');
+        row.className = 'sheet-staff-row';
+        row.innerText = u.user_name;
+        staffList.appendChild(row);
+
+    });
+}
 
         const isMyUnavailable = dayUnavails.some(u => u.user_id === sessionUser.id);
         const actionBtn = document.getElementById('modalActionBtn');
