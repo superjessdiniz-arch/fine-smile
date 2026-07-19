@@ -1178,9 +1178,9 @@ sessionUser = {
                 badgesList.className = 'badges-list';
              dayUnavails.slice(0, 3).forEach(u => {
 
-    if (sessionUser.role !== "管理者" && u.user_id !== sessionUser.id) {
-        return;
-    }
+    if (sessionUser?.role !== "管理者" && u.user_id !== sessionUser?.id) {
+    return;
+}
 
     const badge = document.createElement('div');
     badge.className = 'badge-pill';
