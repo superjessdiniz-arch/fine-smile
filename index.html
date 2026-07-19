@@ -1193,7 +1193,9 @@ if (sessionUser.role === "管理者") {
 }
        function renderAdminSidebar() {
 
-    if (sessionUser.role !== "管理者") return;
+ if (!sessionUser) return;
+
+if (sessionUser.role !== "管理者") return;
 
     const list = document.getElementById("absenceList");
 
