@@ -1028,8 +1028,14 @@ sessionUser = {
         document.getElementById('appTabBar').style.display = 'flex';
 
         document.getElementById('userNameLabel').innerText = sessionUser.name;
-        document.getElementById('userRoleLabel').innerText = sessionUser.role === '管理者' ? t.adminBadge : t.staffBadge;
-        document.getElementById('userRoleLabel').className = `role-badge ${sessionUser.role === '管理者' ? '' : 'staff'}`;
+        if (userRoleLabel) {
+    userRoleLabel.innerText =
+        sessionUser?.role === '管理者'
+            ? t.adminBadge
+            : t.staffBadge;
+}
+        document.getElementById('userRoleLabel').className =
+    `role-badge ${sessionUser?.role === '管理者' ? '' : 'staff'}`;
 
         renderCalendar();
     }
