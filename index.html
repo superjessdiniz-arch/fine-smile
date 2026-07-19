@@ -1231,18 +1231,24 @@ if (userRoleLabel) {
         if (dayUnavails.length === 0) {
             staffList.innerHTML = `<div class="no-staff-txt" id="noStaffMsg">${t.noStaff}</div>`;
         } else {
-dayUnavails.forEach(u => {
+        } else {
+            dayUnavails.forEach(u => {
 
-    // Funcionário só pode ver o próprio nome
-if (!sessionUser) {
-    return;
-}
+                if (!sessionUser) {
+                    return;
+                }
 
-if (sessionUser.role !== "管理者" && u.user_id !== sessionUser.id) {
-    return;
-}
+                if (sessionUser.role !== "管理者" && u.user_id !== sessionUser.id) {
+                    return;
+                }
 
-    const row = document.createElement('div');
+                const row = document.createElement('div');
+                row.className = 'sheet-staff-row';
+                row.innerText = u.user_name;
+                staffList.appendChild(row);
+
+            });
+        }
     row.className = 'sheet-staff-row';
     row.innerText = u.user_name;
     staffList.appendChild(row);
