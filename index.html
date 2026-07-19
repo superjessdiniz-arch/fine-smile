@@ -1026,7 +1026,22 @@
 
     window.onload = function() {
     applyTranslations();
+    checkForPasswordRecoveryInUrl();
 };
+
+    // Fallback: em alguns casos o evento PASSWORD_RECOVERY do Supabase
+    // não chega a tempo (ou o navegador processa a URL antes do listener
+    // estar pronto). Aqui checamos diretamente se a URL contém os
+    // parâmetros de recuperação (tanto no formato #hash quanto ?query,
+    // usados por diferentes versões do fluxo de auth do Supabase).
+    function checkForPasswordRecoveryInUrl() {
+        const hash = window.location.hash || '';
+        const search = window.location.search || '';
+
+        if (hash.includes('type=recovery') || search.includes('type=recovery')) {
+            document.getElementById('resetPasswordModal').classList.add('active');
+        }
+    }
 
     function showAuthStatus(message, isError) {
         const el = document.getElementById('authStatusMsg');
@@ -1318,6 +1333,9 @@ if (userRoleLabel) {
         const container = document.getElementById('adminListScroll');
         container.innerHTML = '';
 
+        // Papéis existentes no app: "管理者" (administrador/ADM) e "スタッフ" (funcionário).
+        // Aqui checamos "diferente de 管理者" (em vez de "igual a スタッフ") de propósito:
+        // assim, qualquer valor inesperado de role também fica de fora da lista admin.
         if (sessionUser?.role !== '管理者') {
             return;
         }
@@ -1533,7 +1551,8 @@ if (userRoleLabel) {
             const dayUnavails = unavails.filter(a => a.date === dateStr);
 
             // Filtra por permissão ANTES de limitar a quantidade exibida:
-            // um funcionário só pode ver a própria ausência; o admin vê todas.
+            // "管理者" (administrador/ADM) vê a ausência de todos;
+            // qualquer outro role (ex: "スタッフ" = funcionário) só vê a própria.
             const visibleUnavails = dayUnavails.filter(u =>
                 sessionUser?.role === "管理者" || u.user_id === sessionUser?.id
             );
@@ -1603,6 +1622,9 @@ if (dayUnavails.length === 0) {
             return;
         }
 
+        // Funcionário só pode ver o próprio nome.
+        // "管理者" = administrador (ADM); qualquer outro valor de role (ex: "スタッフ" = funcionário)
+        // cai na condição abaixo e só vê a própria linha (u.user_id === sessionUser.id).
         if (sessionUser.role !== "管理者" && u.user_id !== sessionUser.id) {
             return;
         }
