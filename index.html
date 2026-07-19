@@ -1227,7 +1227,7 @@ const ADMIN_EMAIL = "finesmilekaisha@gmail.com";
 sessionUser = {
     id: data.user.id,
     email: data.user.email,
-    name: userMeta.full_name || "Fine Smile 管理者",
+    name: userMeta.full_name || "Fine Smile",
     role: data.user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()
         ? "管理者"
         : (userMeta.role || "スタッフ"),
