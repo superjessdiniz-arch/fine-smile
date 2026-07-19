@@ -1170,12 +1170,17 @@ sessionUser = {
             if (dayUnavails.length > 0) {
                 const badgesList = document.createElement('div');
                 badgesList.className = 'badges-list';
-                dayUnavails.slice(0, 3).forEach(u => {
-                    const badge = document.createElement('div');
-                    badge.className = 'badge-pill';
-                    badge.innerText = u.user_name;
-                    badgesList.appendChild(badge);
-                });
+             dayUnavails.slice(0, 3).forEach(u => {
+
+    if (sessionUser.role !== "管理者" && u.user_id !== sessionUser.id) {
+        return;
+    }
+
+    const badge = document.createElement('div');
+    badge.className = 'badge-pill';
+    badge.innerText = u.user_name;
+    badgesList.appendChild(badge);
+});
                 cell.appendChild(badgesList);
             }
 
@@ -1213,12 +1218,18 @@ sessionUser = {
         if (dayUnavails.length === 0) {
             staffList.innerHTML = `<div class="no-staff-txt" id="noStaffMsg">${t.noStaff}</div>`;
         } else {
-            dayUnavails.forEach(u => {
-                const row = document.createElement('div');
-                row.className = 'sheet-staff-row';
-                row.innerText = u.user_name;
-                staffList.appendChild(row);
-            });
+dayUnavails.forEach(u => {
+
+    // Funcionário só pode ver o próprio nome
+    if (sessionUser.role !== "管理者" && u.user_id !== sessionUser.id) {
+        return;
+    }
+
+    const row = document.createElement('div');
+    row.className = 'sheet-staff-row';
+    row.innerText = u.user_name;
+    staffList.appendChild(row);
+});
         }
 
         const isMyUnavailable = dayUnavails.some(u => u.user_id === sessionUser.id);
