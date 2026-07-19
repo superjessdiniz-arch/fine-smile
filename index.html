@@ -965,13 +965,19 @@
                     const { data, error } = await appSupabase.auth.signInWithPassword({ email, password });
                     if (error) throw error;
                     
-                    const userMeta = data.user.user_metadata;
-                    sessionUser = {
-                        id: data.user.id,
-                        email: data.user.email,
-                        name: userMeta.full_name || 'User',
-                        role: userMeta.role || 'スタッフ'
-                    };
+const userMeta = data.user.user_metadata;
+
+// Coloque aqui o e-mail do administrador
+const ADMIN_EMAIL = "finesmilekaisha@gmail.com";
+
+sessionUser = {
+    id: data.user.id,
+    email: data.user.email,
+    name: userMeta.full_name || "Fine Smile 管理者",
+    role: data.user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()
+        ? "管理者"
+        : (userMeta.role || "スタッフ")
+};
                     enterApp();
                 }
             } catch (err) {
@@ -1004,7 +1010,7 @@
                     sessionUser = user;
                     enterApp();
                 } else {
-                    if (email === 'yozoey47@gmail.com' || email === 'admin@admin.com') {
+                    if (email === 'finesmilekaisha@gmail.com' || email === 'admin@admin.com') {
                         sessionUser = { id: 'test-id', email, name: 'ジェシカ', role: 'スタッフ' };
                         enterApp();
                     } else {
